@@ -49,8 +49,8 @@
 #define ADV_LED_BLINK_INTERVAL  1000
 
 #define ADV_STATUS_LED DK_LED1
-#define CON_STATUS_LED DK_LED2
-#define LED_CAPS_LOCK  DK_LED3
+#define CON_STATUS_LED DK_LED3
+#define LED_CAPS_LOCK  DK_LED2
 #define NFC_LED	       DK_LED4
 #define KEY_TEXT_MASK  DK_BTN1_MSK
 #define KEY_SHIFT_MASK DK_BTN2_MSK
@@ -140,8 +140,18 @@ static const uint8_t hello_world_str[] = {
 	0x0f,	/* Key l */
 	0x12,	/* Key o */
 	0x28,	/* Key Return */
-};
 
+
+};
+static const uint8_t eetree_str[] = {
+	0x08,	/* Key e */
+	0x08,	/* Key e */
+	0x17,	/* Key t */
+	0x15,	/* Key r */
+	0x08,	/* Key e */
+	0x08,	/* Key e */
+	// 0x28,	/* Key Return */
+};
 static const uint8_t shift_key[] = { 225 };
 
 /* Current report status
@@ -351,6 +361,10 @@ static void caps_lock_handler(const struct bt_hids_rep *rep)
 	uint8_t report_val = ((*rep->data) & OUTPUT_REPORT_BIT_MASK_CAPS_LOCK) ?
 			  1 : 0;
 	dk_set_led(LED_CAPS_LOCK, report_val);
+	if(report_val)
+		printk("CAPS LOCK \n");
+	else
+		printk("CAPS UN LOCK\n");
 }
 
 
@@ -793,30 +807,220 @@ static int hid_buttons_release(const uint8_t *keys, size_t cnt)
 
 	return key_report_send();
 }
-
-
+uint8_t  key_send_flag=0;
+//循环改变数组指针位置
 static void button_text_changed(bool down)
 {
-	static const uint8_t *chr = hello_world_str;
+	static const uint8_t *chr = eetree_str;
 
-	if (down) {
-		hid_buttons_press(chr, 1);
-	} else {
+	// if (down) {
+	// 	hid_buttons_press(chr, 1);
+	// } else {
+	// 	hid_buttons_release(chr, 1);
+	// 	if (++chr == (eetree_str + sizeof(eetree_str))) {
+	// 		chr = eetree_str;
+	// 	}
+	// }
+	
+	if(down){
+		// err = k_msgq_put(&hids_queue, &pos, K_NO_WAIT);
+		hid_buttons_press(chr,1);
+	}
+	else
+	{
 		hid_buttons_release(chr, 1);
-		if (++chr == (hello_world_str + sizeof(hello_world_str))) {
-			chr = hello_world_str;
+		if(key_send_flag==0)
+			key_send_flag=1;
+	}
+	
+	// if(down){
+	// 	chr = eetree_str;
+	// 		for(int i = 0; i <6;i++){
+	// 			hid_buttons_press(chr,1);
+	// 			k_sleep(K_MSEC(5));
+	// 			hid_buttons_release(chr, 1);
+	// 			k_sleep(K_MSEC(5));
+	// 			chr++;
+	// 			}
+	// }
+	
+}
+
+// void button_changed(uint32_t button_state, uint32_t has_changed)
+// {
+// 	bool data_to_send = false;
+// 	struct mouse_pos pos;
+// 	uint32_t buttons = button_state & has_changed;
+
+// 	memset(&pos, 0, sizeof(struct mouse_pos));
+
+// 	if (IS_ENABLED(CONFIG_BT_HIDS_SECURITY_ENABLED)) {
+// 		if (k_msgq_num_used_get(&mitm_queue)) {
+// 			if (buttons & KEY_PAIRING_ACCEPT) {
+// 				num_comp_reply(true);
+
+// 				return;
+// 			}
+
+// 			if (buttons & KEY_PAIRING_REJECT) {
+// 				num_comp_reply(false);
+
+// 				return;
+// 			}
+// 		}
+// 	}
+
+// 	if (buttons & KEY_LEFT_MASK) {
+// 		pos.x_val -= MOVEMENT_SPEED;
+// 		printk("%s(): left\n", __func__);
+// 		data_to_send = true;
+// 	}
+// 	if (buttons & KEY_UP_MASK) {
+// 		pos.y_val -= MOVEMENT_SPEED;
+// 		printk("%s(): up\n", __func__);
+// 		data_to_send = true;
+// 	}
+// 	if (buttons & KEY_RIGHT_MASK) {
+// 		pos.x_val += MOVEMENT_SPEED;
+// 		printk("%s(): right\n", __func__);
+// 		data_to_send = true;
+// 	}
+// 	if (buttons & KEY_DOWN_MASK) {
+// 		pos.y_val += MOVEMENT_SPEED;
+// 		printk("%s(): down\n", __func__);
+// 		data_to_send = true;
+// 	}
+
+// 	if (data_to_send) {
+// 		int err;
+
+// 		err = k_msgq_put(&hids_queue, &pos, K_NO_WAIT);
+// 		if (err) {
+// 			printk("No space in the queue for button pressed\n");
+// 			return;
+// 		}
+// 		if (k_msgq_num_used_get(&hids_queue) == 1) {
+// 			k_work_submit(&hids_work);
+// 		}
+// 	}
+// }
+// static void mouse_movement_send(int16_t x_delta, int16_t y_delta)
+// {
+// 	for (size_t i = 0; i < CONFIG_BT_HIDS_MAX_CLIENT_COUNT; i++) {
+
+// 		if (!conn_mode[i].conn) {
+// 			continue;
+// 		}
+
+// 		if (conn_mode[i].in_boot_mode) {
+// 			x_delta = MAX(MIN(x_delta, SCHAR_MAX), SCHAR_MIN);
+// 			y_delta = MAX(MIN(y_delta, SCHAR_MAX), SCHAR_MIN);
+
+// 			bt_hids_boot_mouse_inp_rep_send(&hids_obj,
+// 							     conn_mode[i].conn,
+// 							     NULL,
+// 							     (int8_t) x_delta,
+// 							     (int8_t) y_delta,
+// 							     NULL);
+// 		} else {
+// 			uint8_t x_buff[2];
+// 			uint8_t y_buff[2];
+// 			uint8_t buffer[INPUT_REP_MOVEMENT_LEN];
+
+// 			int16_t x = MAX(MIN(x_delta, 0x07ff), -0x07ff);
+// 			int16_t y = MAX(MIN(y_delta, 0x07ff), -0x07ff);
+
+// 			/* Convert to little-endian. */
+// 			sys_put_le16(x, x_buff);
+// 			sys_put_le16(y, y_buff);
+
+// 			/* Encode report. */
+// 			BUILD_ASSERT(sizeof(buffer) == 3,
+// 					 "Only 2 axis, 12-bit each, are supported");
+
+// 			buffer[0] = x_buff[0];
+// 			buffer[1] = (y_buff[0] << 4) | (x_buff[1] & 0x0f);
+// 			buffer[2] = (y_buff[1] << 4) | (y_buff[0] >> 4);
+
+
+// 			bt_hids_inp_rep_send(&hids_obj, conn_mode[i].conn,
+// 						  INPUT_REP_MOVEMENT_INDEX,
+// 						  buffer, sizeof(buffer), NULL);
+// 		}
+// 	}
+// }
+static void mouse_movement_send(uint16_t click,int16_t x_delta, int16_t y_delta)
+{
+	for (size_t i = 0; i < CONFIG_BT_HIDS_MAX_CLIENT_COUNT; i++) {
+
+		if (!conn_mode[i].conn) {
+			continue;
+		}
+
+		if (conn_mode[i].in_boot_mode) {
+			x_delta = MAX(MIN(x_delta, SCHAR_MAX), SCHAR_MIN);
+			y_delta = MAX(MIN(y_delta, SCHAR_MAX), SCHAR_MIN);
+
+			bt_hids_boot_mouse_inp_rep_send(&hids_obj,
+							     conn_mode[i].conn,
+							     click,
+							     (int8_t) x_delta,
+							     (int8_t) y_delta,
+							     NULL);
+		} else {
+			uint8_t x_buff[2];
+			uint8_t y_buff[2];
+			uint8_t buffer[3];
+
+			int16_t x = MAX(MIN(x_delta, 0x07ff), -0x07ff);
+			int16_t y = MAX(MIN(y_delta, 0x07ff), -0x07ff);
+
+			/* Convert to little-endian. */
+			sys_put_le16(x, x_buff);
+			sys_put_le16(y, y_buff);
+
+			/* Encode report. */
+			BUILD_ASSERT(sizeof(buffer) == 3,
+					 "Only 2 axis, 12-bit each, are supported");
+
+			buffer[0] = x_buff[0];
+			buffer[1] = (y_buff[0] << 4) | (x_buff[1] & 0x0f);
+			buffer[2] = (y_buff[1] << 4) | (y_buff[0] >> 4);
+
+
+			bt_hids_inp_rep_send(&hids_obj, conn_mode[i].conn,
+						  1,
+						  buffer, sizeof(buffer), NULL);
 		}
 	}
 }
-
-
 static void button_shift_changed(bool down)
 {
 	if (down) {
-		hid_buttons_press(shift_key, 1);
+		// hid_buttons_press(shift_key, 1);
+		// for (size_t i = 0; i < CONFIG_BT_HIDS_MAX_CLIENT_COUNT; i++) {
+		// 			bt_hids_boot_mouse_inp_rep_send(&hids_obj,
+		// 					     conn_mode[i].conn,
+		// 					     1,
+		// 					     (int8_t) 0,
+		// 					     (int8_t) 0,
+		// 					     NULL);
+		// }
+	mouse_movement_send(1,0,0);
 	} else {
-		hid_buttons_release(shift_key, 1);
+		// hid_buttons_release(shift_key, 1);
+		// for (size_t i = 0; i < CONFIG_BT_HIDS_MAX_CLIENT_COUNT; i++) {
+		// 			bt_hids_boot_mouse_inp_rep_send(&hids_obj,
+		// 					     conn_mode[i].conn,
+		// 					     0,
+		// 					     (int8_t) 0,
+		// 					     (int8_t) 0,
+		// 					     NULL);
+		// }
+		mouse_movement_send(0,0,0);
 	}
+
+	
 }
 
 
@@ -923,10 +1127,10 @@ static void bas_notify(void)
 
 	battery_level--;
 
-	if (!battery_level) {
+	if (10==battery_level) {
 		battery_level = 100U;
 	}
-
+	
 	bt_bas_set_battery_level(battery_level);
 }
 
@@ -974,15 +1178,89 @@ int main(void)
 #endif
 
 	k_work_init(&pairing_work, pairing_process);
-
+	uint8_t *chnr = eetree_str;
+	uint8_t time_tick=0;
 	for (;;) {
-		if (is_adv) {
-			dk_set_led(ADV_STATUS_LED, (++blink_status) % 2);
-		} else {
-			dk_set_led_off(ADV_STATUS_LED);
+		if(time_tick>=50)
+		{
+			time_tick=0;
+			if (is_adv) {
+						dk_set_led(ADV_STATUS_LED, (++blink_status) % 2);
+					} else {
+						dk_set_led_off(ADV_STATUS_LED);
+					}
+				/* Battery level simulation */
+			bas_notify();
 		}
-		k_sleep(K_MSEC(ADV_LED_BLINK_INTERVAL));
-		/* Battery level simulation */
-		bas_notify();
+		
+	switch (key_send_flag)
+	{
+	case 1:
+	// hid_buttons_press(chnr,1);
+	/* code */
+	break;
+	case 2:
+	hid_buttons_press(chnr+1,1);
+	/* code */
+	break;
+	case 3:
+	hid_buttons_press(chnr+2,1);
+	/* code */
+	break;
+	case 4:
+	hid_buttons_press(chnr+3,1);
+	/* code */
+	break;
+	case 5:
+	hid_buttons_press(chnr+4,1);
+	/* code */
+	break;
+	case 6:
+	hid_buttons_press(chnr+5,1);
+	/* code */
+	break;
+	default:
+		break;
+	}	
+	// k_sleep(K_MSEC(ADV_LED_BLINK_INTERVAL));
+	k_sleep(K_MSEC(20));
+	time_tick++;
+	switch (key_send_flag)
+	{
+	case 1:
+	// hid_buttons_release(chnr,1);
+	key_send_flag=2;
+	/* code */
+	break;
+	case 2:
+	hid_buttons_release(chnr+1,1);
+	key_send_flag=3;
+	/* code */
+	break;
+	case 3:
+	hid_buttons_release(chnr+2,1);
+	key_send_flag=4;
+	/* code */
+	break;
+	case 4:
+	hid_buttons_release(chnr+3,1);
+	/* code */
+	key_send_flag=5;
+	break;
+	case 5:
+	hid_buttons_release(chnr+4,1);
+	key_send_flag=6;
+	/* code */
+	break;
+	case 6:
+	hid_buttons_release(chnr+5,1);
+	key_send_flag=0;
+	/* code */
+	break;
+	default:
+		break;
+	}
+	
+
 	}
 }

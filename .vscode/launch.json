@@ -1,0 +1,12 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "nrf-connect",
+			"request": "launch",
+			"name": "Launch peripheral_hids_keyboard_5340\\build",
+			"config": "d:/1MCU/ncs/APP_PROJ/peripheral_hids_keyboard_5340/build",
+			"runToEntryPoint": "main"
+		}
+	]
+}
