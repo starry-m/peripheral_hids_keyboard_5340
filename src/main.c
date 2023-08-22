@@ -107,11 +107,20 @@ enum {
 enum {
 	INPUT_REP_KEYS_IDX = 0
 };
-
+/* Length of Mouse Input Report containing button data. */
+#define INPUT_REP_BUTTONS_LEN       3
+/* Length of Mouse Input Report containing movement data. */
+#define INPUT_REP_MOVEMENT_LEN      3
+/* Length of Mouse Input Report containing media player data. */
+#define INPUT_REP_MEDIA_PLAYER_LEN  1
 /* HIDS instance. */
 BT_HIDS_DEF(hids_obj,
 	    OUTPUT_REPORT_MAX_LEN,
-	    INPUT_REPORT_KEYS_MAX_LEN);
+	    INPUT_REPORT_KEYS_MAX_LEN,
+		INPUT_REP_BUTTONS_LEN
+	    // INPUT_REP_MOVEMENT_LEN,
+	    // INPUT_REP_MEDIA_PLAYER_LEN
+		);
 
 static volatile bool is_adv;
 
@@ -444,6 +453,7 @@ static void hid_init(void)
 	struct bt_hids_init_param    hids_init_obj = { 0 };
 	struct bt_hids_inp_rep       *hids_inp_rep;
 	struct bt_hids_outp_feat_rep *hids_outp_rep;
+	static const uint8_t mouse_movement_mask[DIV_ROUND_UP(3, 8)] = {0};
 
 	static const uint8_t report_map[] = {
 		0x05, 0x01,       /* Usage Page (Generic Desktop) */
@@ -492,7 +502,137 @@ static void hid_init(void)
 		0x91, 0x01,       /* Output (Data, Variable, Absolute), */
 				  /* Led report padding */
 
-		0xC0              /* End Collection (Application) */
+		0xC0,              /* End Collection (Application) */
+
+
+		0x05, 0x01,     /* Usage Page (Generic Desktop) */
+		0x09, 0x02,     /* Usage (Mouse) */
+
+		0xA1, 0x01,     /* Collection (Application) */
+
+
+	// /* Report ID 1: Mouse buttons + scroll/pan */
+	// 	0x85, 0x02,       /* Report Id 1 */
+	// 	0x09, 0x01,       /* Usage (Pointer) */
+	// 	0xA1, 0x00,       /* Collection (Physical) */
+	// 	0x95, 0x05,       /* Report Count (5) */
+	// 	0x75, 0x01,       /* Report Size (1) */
+	// 	0x05, 0x09,       /* Usage Page (Buttons) */
+	// 	0x19, 0x01,       /* Usage Minimum (01) */
+	// 	0x29, 0x05,       /* Usage Maximum (05) */
+	// 	0x15, 0x00,       /* Logical Minimum (0) */
+	// 	0x25, 0x01,       /* Logical Maximum (1) */
+	// 	0x81, 0x02,       /* Input (Data, Variable, Absolute) */
+
+	// 	0x95, 0x01,       /* Report Count (1) */
+	// 	0x75, 0x03,       /* Report Size (3) */
+	// 	0x81, 0x01,       /* Input (Constant) for padding */
+
+	// 	0x75, 0x08,       /* Report Size (8) */
+	// 	0x95, 0x01,       /* Report Count (1) */
+	// 	0x05, 0x01,       /* Usage Page (Generic Desktop) */
+	// 	0x09, 0x38,       /* Usage (Wheel) */
+	// 	0x15, 0x81,       /* Logical Minimum (-127) */
+	// 	0x25, 0x7F,       /* Logical Maximum (127) */
+	// 	0x81, 0x06,       /* Input (Data, Variable, Relative) */
+
+	// 	0x05, 0x0C,       /* Usage Page (Consumer) */
+	// 	0x0A, 0x38, 0x02, /* Usage (AC Pan) */
+	// 	0x95, 0x01,       /* Report Count (1) */
+	// 	0x81, 0x06,       /* Input (Data,Value,Relative,Bit Field) */
+	// 	0xC0,             /* End Collection (Physical) */
+	// 	0xC0,             /* End Collection (Application) */
+
+
+		/* Report ID 1: Mouse buttons + scroll/pan */
+		0x85, 0x02,       /* Report Id 1 */
+		0x09, 0x01,       /* Usage (Pointer) */
+		0xA1, 0x00,       /* Collection (Physical) */
+		0x95, 0x05,       /* Report Count (5) */
+		0x75, 0x01,       /* Report Size (1) */
+		0x05, 0x09,       /* Usage Page (Buttons) */
+		0x19, 0x01,       /* Usage Minimum (01) */
+		0x29, 0x05,       /* Usage Maximum (05) */
+		0x15, 0x00,       /* Logical Minimum (0) */
+		0x25, 0x01,       /* Logical Maximum (1) */
+		0x81, 0x02,       /* Input (Data, Variable, Absolute) */
+
+		// 0x95, 0x01,       /* Report Count (1) */
+		// 0x75, 0x03,       /* Report Size (3) */
+		// 0x81, 0x02,       /* Input (Constant) for padding */
+
+		0x95, 0x01,       /* Report Count (1) */
+		0x75, 0x03,       /* Report Size (3) */
+		0x81, 0x01,       /* Input (Constant) for padding */
+
+		// 0x75, 0x08,       /* Report Size (8) */
+		// 0x95, 0x01,       /* Report Count (1) */
+
+		0x05, 0x01,       /* Usage Page (Generic Desktop) */
+		0x09, 0x30,
+		0x09, 0x31,
+		0x09, 0x38,       /* Usage (Wheel) */
+		0x15, 0x81,       /* Logical Minimum (-127) */
+		0x25, 0x7F,       /* Logical Maximum (127) */
+		// 0x81, 0x06,       /* Input (Data, Variable, Relative) */
+		0x75, 0x08,
+		 0x95,0x03,
+		0x81, 0x06,
+		0xC0,             /* End Collection (Physical) */
+		0xC0,             /* End Collection (Application) */
+
+		// 0x05, 0x0C,       /* Usage Page (Consumer) */
+		// 0x0A, 0x38, 0x02, /* Usage (AC Pan) */
+		// 0x95, 0x01,       /* Report Count (1) */
+		// 0x81, 0x06,       /* Input (Data,Value,Relative,Bit Field) */
+		// 0xC0,             /* End Collection (Physical) */
+		// 0xC0,             /* End Collection (Application) */
+
+		// /* Report ID 2: Mouse motion */
+		// 0x85, 0x03,       /* Report Id 2 */
+		// 0x09, 0x01,       /* Usage (Pointer) */
+		// 0xA1, 0x00,       /* Collection (Physical) */
+		// 0x75, 0x0C,       /* Report Size (12) */
+		// 0x95, 0x02,       /* Report Count (2) */
+		// 0x05, 0x01,       /* Usage Page (Generic Desktop) */
+		// 0x09, 0x30,       /* Usage (X) */
+		// 0x09, 0x31,       /* Usage (Y) */
+		// 0x16, 0x01, 0xF8, /* Logical maximum (2047) */
+		// 0x26, 0xFF, 0x07, /* Logical minimum (-2047) */
+		// 0x81, 0x06,       /* Input (Data, Variable, Relative) */
+		// 0xC0,             /* End Collection (Physical) */
+		// 0xC0,             /* End Collection (Application) */
+
+		// 	/* Report ID 3: Advanced buttons */
+		// 0x05, 0x0C,       /* Usage Page (Consumer) */
+		// 0x09, 0x01,       /* Usage (Consumer Control) */
+		// 0xA1, 0x01,       /* Collection (Application) */
+		// 0x85, 0x04,       /* Report Id (3) */
+		// 0x15, 0x00,       /* Logical minimum (0) */
+		// 0x25, 0x01,       /* Logical maximum (1) */
+		// 0x75, 0x01,       /* Report Size (1) */
+		// 0x95, 0x01,       /* Report Count (1) */
+
+		// 0x09, 0xCD,       /* Usage (Play/Pause) */
+		// 0x81, 0x06,       /* Input (Data,Value,Relative,Bit Field) */
+		// 0x0A, 0x83, 0x01, /* Usage (Consumer Control Configuration) */
+		// 0x81, 0x06,       /* Input (Data,Value,Relative,Bit Field) */
+		// 0x09, 0xB5,       /* Usage (Scan Next Track) */
+		// 0x81, 0x06,       /* Input (Data,Value,Relative,Bit Field) */
+		// 0x09, 0xB6,       /* Usage (Scan Previous Track) */
+		// 0x81, 0x06,       /* Input (Data,Value,Relative,Bit Field) */
+
+		// 0x09, 0xEA,       /* Usage (Volume Down) */
+		// 0x81, 0x06,       /* Input (Data,Value,Relative,Bit Field) */
+		// 0x09, 0xE9,       /* Usage (Volume Up) */
+		// 0x81, 0x06,       /* Input (Data,Value,Relative,Bit Field) */
+		// 0x0A, 0x25, 0x02, /* Usage (AC Forward) */
+		// 0x81, 0x06,       /* Input (Data,Value,Relative,Bit Field) */
+		// 0x0A, 0x24, 0x02, /* Usage (AC Back) */
+		// 0x81, 0x06,       /* Input (Data,Value,Relative,Bit Field) */
+		// 0xC0              /* End Collection */
+
+
 	};
 
 	hids_init_obj.rep_map.data = report_map;
@@ -509,6 +649,22 @@ static void hid_init(void)
 	hids_inp_rep->id = INPUT_REP_KEYS_REF_ID;
 	hids_init_obj.inp_rep_group_init.cnt++;
 
+	hids_inp_rep++;
+	hids_inp_rep->size = 4;
+	hids_inp_rep->id = 2;
+	hids_init_obj.inp_rep_group_init.cnt++;
+	
+	// hids_inp_rep++;
+	// hids_inp_rep->size = 3;
+	// hids_inp_rep->id = 3;
+	// // hids_inp_rep->rep_mask = mouse_movement_mask;
+	// hids_init_obj.inp_rep_group_init.cnt++;
+	// hids_inp_rep++;
+	// hids_inp_rep->size = 1;
+	// hids_inp_rep->id = 4;
+	// hids_init_obj.inp_rep_group_init.cnt++;
+
+
 	hids_outp_rep =
 		&hids_init_obj.outp_rep_group_init.reports[OUTPUT_REP_KEYS_IDX];
 	hids_outp_rep->size = OUTPUT_REPORT_MAX_LEN;
@@ -517,10 +673,12 @@ static void hid_init(void)
 	hids_init_obj.outp_rep_group_init.cnt++;
 
 	hids_init_obj.is_kb = true;
+	hids_init_obj.is_mouse = true;
 	hids_init_obj.boot_kb_outp_rep_handler = hids_boot_kb_outp_rep_handler;
 	hids_init_obj.pm_evt_handler = hids_pm_evt_handler;
 
 	err = bt_hids_init(&hids_obj, &hids_init_obj);
+	printk("input report cnt is %d\n",hids_obj.inp_rep_group.cnt);
 	__ASSERT(err == 0, "HIDS initialization failed\n");
 }
 
@@ -845,110 +1003,68 @@ static void button_text_changed(bool down)
 	// }
 	
 }
+void mouseButtonClick(uint8_t button) {
+	for (size_t i = 0; i < CONFIG_BT_HIDS_MAX_CLIENT_COUNT; i++) {
 
-// void button_changed(uint32_t button_state, uint32_t has_changed)
-// {
-// 	bool data_to_send = false;
-// 	struct mouse_pos pos;
-// 	uint32_t buttons = button_state & has_changed;
+		if (!conn_mode[i].conn) {
+			continue;
+		}
 
-// 	memset(&pos, 0, sizeof(struct mouse_pos));
+		if (conn_mode[i].in_boot_mode) {
+			// x_delta = MAX(MIN(x_delta, SCHAR_MAX), SCHAR_MIN);
+			// y_delta = MAX(MIN(y_delta, SCHAR_MAX), SCHAR_MIN);
 
-// 	if (IS_ENABLED(CONFIG_BT_HIDS_SECURITY_ENABLED)) {
-// 		if (k_msgq_num_used_get(&mitm_queue)) {
-// 			if (buttons & KEY_PAIRING_ACCEPT) {
-// 				num_comp_reply(true);
+			bt_hids_boot_mouse_inp_rep_send(&hids_obj,
+							     conn_mode[i].conn,
+							     NULL,
+							     (int8_t) 0,
+							     (int8_t) 0,
+							     NULL);
+		} else {
+			// uint8_t x_buff[2];
+			// uint8_t y_buff[2];
+			uint8_t buffer[4];
 
-// 				return;
-// 			}
+			// int16_t x = MAX(MIN(x_delta, 0x07ff), -0x07ff);
+			// int16_t y = MAX(MIN(y_delta, 0x07ff), -0x07ff);
 
-// 			if (buttons & KEY_PAIRING_REJECT) {
-// 				num_comp_reply(false);
+			// /* Convert to little-endian. */
+			// sys_put_le16(x, x_buff);
+			// sys_put_le16(y, y_buff);
 
-// 				return;
-// 			}
-// 		}
-// 	}
+			// /* Encode report. */
+			// BUILD_ASSERT(sizeof(buffer) == 3,
+			// 		 "Only 2 axis, 12-bit each, are supported");
 
-// 	if (buttons & KEY_LEFT_MASK) {
-// 		pos.x_val -= MOVEMENT_SPEED;
-// 		printk("%s(): left\n", __func__);
-// 		data_to_send = true;
-// 	}
-// 	if (buttons & KEY_UP_MASK) {
-// 		pos.y_val -= MOVEMENT_SPEED;
-// 		printk("%s(): up\n", __func__);
-// 		data_to_send = true;
-// 	}
-// 	if (buttons & KEY_RIGHT_MASK) {
-// 		pos.x_val += MOVEMENT_SPEED;
-// 		printk("%s(): right\n", __func__);
-// 		data_to_send = true;
-// 	}
-// 	if (buttons & KEY_DOWN_MASK) {
-// 		pos.y_val += MOVEMENT_SPEED;
-// 		printk("%s(): down\n", __func__);
-// 		data_to_send = true;
-// 	}
+			// buffer[0] = x_buff[0];
+			// buffer[1] = (y_buff[0] << 4) | (x_buff[1] & 0x0f);
+			// buffer[2] = (y_buff[1] << 4) | (y_buff[0] >> 4);
+			buffer[0] = 0;
+			buffer[1] = 0;
+			buffer[2] =0;
+			buffer[3] = 0;
+			if(button==1)
+			{
+				buffer[0] = 1;
+			}
+			else if(button==2)
+			{
+				buffer[0]=2;
+			}
+			else if(button==3)
+			{
+				buffer[0]=4;
+			}
+			// printk("buffer: %d %d %d\n",buffer[2],buffer[1],buffer[0]);
+			//INPUT_REP_BUTTONS_INDEX    INPUT_REP_MOVEMENT_INDEX
+			bt_hids_inp_rep_send(&hids_obj, conn_mode[i].conn,
+						  1,
+						  buffer, sizeof(buffer), NULL);
+		}
+	}
 
-// 	if (data_to_send) {
-// 		int err;
+}
 
-// 		err = k_msgq_put(&hids_queue, &pos, K_NO_WAIT);
-// 		if (err) {
-// 			printk("No space in the queue for button pressed\n");
-// 			return;
-// 		}
-// 		if (k_msgq_num_used_get(&hids_queue) == 1) {
-// 			k_work_submit(&hids_work);
-// 		}
-// 	}
-// }
-// static void mouse_movement_send(int16_t x_delta, int16_t y_delta)
-// {
-// 	for (size_t i = 0; i < CONFIG_BT_HIDS_MAX_CLIENT_COUNT; i++) {
-
-// 		if (!conn_mode[i].conn) {
-// 			continue;
-// 		}
-
-// 		if (conn_mode[i].in_boot_mode) {
-// 			x_delta = MAX(MIN(x_delta, SCHAR_MAX), SCHAR_MIN);
-// 			y_delta = MAX(MIN(y_delta, SCHAR_MAX), SCHAR_MIN);
-
-// 			bt_hids_boot_mouse_inp_rep_send(&hids_obj,
-// 							     conn_mode[i].conn,
-// 							     NULL,
-// 							     (int8_t) x_delta,
-// 							     (int8_t) y_delta,
-// 							     NULL);
-// 		} else {
-// 			uint8_t x_buff[2];
-// 			uint8_t y_buff[2];
-// 			uint8_t buffer[INPUT_REP_MOVEMENT_LEN];
-
-// 			int16_t x = MAX(MIN(x_delta, 0x07ff), -0x07ff);
-// 			int16_t y = MAX(MIN(y_delta, 0x07ff), -0x07ff);
-
-// 			/* Convert to little-endian. */
-// 			sys_put_le16(x, x_buff);
-// 			sys_put_le16(y, y_buff);
-
-// 			/* Encode report. */
-// 			BUILD_ASSERT(sizeof(buffer) == 3,
-// 					 "Only 2 axis, 12-bit each, are supported");
-
-// 			buffer[0] = x_buff[0];
-// 			buffer[1] = (y_buff[0] << 4) | (x_buff[1] & 0x0f);
-// 			buffer[2] = (y_buff[1] << 4) | (y_buff[0] >> 4);
-
-
-// 			bt_hids_inp_rep_send(&hids_obj, conn_mode[i].conn,
-// 						  INPUT_REP_MOVEMENT_INDEX,
-// 						  buffer, sizeof(buffer), NULL);
-// 		}
-// 	}
-// }
 static void mouse_movement_send(uint16_t click,int16_t x_delta, int16_t y_delta)
 {
 	for (size_t i = 0; i < CONFIG_BT_HIDS_MAX_CLIENT_COUNT; i++) {
@@ -1006,7 +1122,8 @@ static void button_shift_changed(bool down)
 		// 					     (int8_t) 0,
 		// 					     NULL);
 		// }
-	mouse_movement_send(1,0,0);
+	printk("clicked down\n");
+	mouseButtonClick(1);
 	} else {
 		// hid_buttons_release(shift_key, 1);
 		// for (size_t i = 0; i < CONFIG_BT_HIDS_MAX_CLIENT_COUNT; i++) {
@@ -1017,7 +1134,8 @@ static void button_shift_changed(bool down)
 		// 					     (int8_t) 0,
 		// 					     NULL);
 		// }
-		mouse_movement_send(0,0,0);
+		printk("clicked up\n");
+		mouseButtonClick(0);
 	}
 
 	
@@ -1085,7 +1203,8 @@ static void button_changed(uint32_t button_state, uint32_t has_changed)
 		button_text_changed((button_state & KEY_TEXT_MASK) != 0);
 	}
 	if (has_changed & KEY_SHIFT_MASK) {
-		button_shift_changed((button_state & KEY_SHIFT_MASK) != 0);
+		// button_shift_changed((button_state & KEY_SHIFT_MASK) != 0);
+		mouseButtonClick((button_state & KEY_SHIFT_MASK) != 0);
 	}
 #if CONFIG_NFC_OOB_PAIRING
 	if (has_changed & KEY_ADV_MASK) {
